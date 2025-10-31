@@ -31,16 +31,31 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.example.recipes.data.repository.MealRepository
 import com.example.recipes.presentation.screen.RecipeListScreen
 import com.example.recipes.presentation.screen.RecipeListScreen.RecipeListScreen
+import com.example.recipes.presentation.viewmodel.RecipesViewModel
 import com.example.recipes.ui.theme.RecipesTheme
+import javax.inject.Inject
 
 class MainActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var repository: MealRepository
+
+    private lateinit var viewModel: RecipesViewModel
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Внедряем зависимости
+        (application as RecipesApplication).appComponent.inject(this)
+
+        // Создаем ViewModel с зависимостями
+        viewModel = RecipesViewModel(repository)
+
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            RecipeListScreen()
+            RecipeListScreen(viewModel = viewModel)
         }
     }
 }

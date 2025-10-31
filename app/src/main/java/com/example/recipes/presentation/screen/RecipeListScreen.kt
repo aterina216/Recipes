@@ -19,25 +19,22 @@ import com.example.recipes.presentation.viewmodel.RecipesViewModel
 object RecipeListScreen {
 
     @Composable
-    fun RecipeListScreen(){
-        val viewModel: RecipesViewModel = viewModel()
+    fun RecipeListScreen(viewModel: RecipesViewModel) {
         val meals by viewModel.meals.collectAsState()
         val isLoading by viewModel.isLoading.collectAsState()
 
-        if(isLoading){
+        if (isLoading) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
-            ){
+            ) {
                 CircularProgressIndicator()
             }
-        }
-        else {
+        } else {
             LazyColumn {
-                items(meals) {
-                    meal ->
+                items(meals) { meal ->
                     RecipeItem(meal = meal)
-            }
+                }
             }
             LaunchedEffect(meals) {
                 if (meals.isNotEmpty()) {
