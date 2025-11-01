@@ -66,4 +66,8 @@ class MealRepository(
     suspend fun markAsAccessed(mealId: String) {
         mealDao.updateLastedAccessed(mealId)
     }
+
+    suspend fun getMealById(id: String): Meal?{
+        return mealDao.getMealById(id)
+    }
 }

@@ -9,8 +9,10 @@ import com.example.recipes.data.remote.RetrofitClient
 import com.example.recipes.data.remote.model.Meal
 import com.example.recipes.data.repository.MealRepository
 import com.example.recipes.utils.MemoryLogger
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.compose
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -21,11 +23,15 @@ class RecipesViewModel @Inject constructor(
     private val _meals = MutableStateFlow<List<Meal>>(emptyList())
     val meals: StateFlow<List<Meal>> = _meals
 
+    private val _favoriteMeals = MutableStateFlow<List<Meal>>(emptyList())
+    val favorite_meals : StateFlow<List<Meal>> = _favoriteMeals
+
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
     init {
         loadRandomMeals()
+        loadFavorites()
     }
 
     private fun loadRandomMeals() {
@@ -51,5 +57,18 @@ class RecipesViewModel @Inject constructor(
 
     fun checkMemory() {
         MemoryLogger.logMemory("MANUAL_CHECK")
+    }
+
+    private fun loadFavorites(){
+        viewModelScope.launch {
+            repository.getFavorites().collect {
+                favoriteList ->
+                _favoriteMeals.value = favoriteList
+            }
+        }
+    }
+
+    private fun getFavorites(): Flow<List<Meal>>{
+        return repository.getFavorites()
     }
 }

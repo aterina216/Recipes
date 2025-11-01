@@ -35,4 +35,7 @@ interface Mealdao {
     @Query("DELETE FROM recipes WHERE last_accessed < :timestamp AND is_favorite = 0")
     suspend fun cleanOldMeals(timestamp: Long = System.currentTimeMillis())
 
+    @Query("SELECT * FROM recipes WHERE idMeal = :id LIMIT 1")
+    suspend fun getMealById(id: String): Meal?
+
 }

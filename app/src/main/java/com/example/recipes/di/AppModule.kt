@@ -2,11 +2,13 @@ package com.example.recipes.di
 
 import android.app.Application
 import android.content.Context
+import androidx.lifecycle.ViewModelProvider
 import androidx.room.Room
 import com.example.recipes.data.local.dao.Mealdao
 import com.example.recipes.data.local.db.AppDatabase
 import com.example.recipes.data.remote.api.MealApi
 import com.example.recipes.data.repository.MealRepository
+import com.example.recipes.presentation.viewmodel.ViewModelFactory
 import dagger.Module
 import dagger.Provides
 import retrofit2.Retrofit
@@ -62,5 +64,11 @@ class AppModule(private val application: Application) {
         mealDao: Mealdao
     ): MealRepository {
         return MealRepository(mealApi, mealDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideViewModelFactory(repository: MealRepository): ViewModelProvider.Factory {
+        return ViewModelFactory(repository)
     }
 }

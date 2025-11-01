@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -29,6 +30,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.recipes.data.repository.MealRepository
@@ -41,16 +43,13 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
 
     @Inject
-    lateinit var repository: MealRepository
+    lateinit var viewModelFactory: ViewModelProvider.Factory
 
-    private lateinit var viewModel: RecipesViewModel
+    private val viewModel: RecipesViewModel by viewModels { viewModelFactory }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Внедряем зависимости
+        // Внедряем ДО super.onCreate()
         (application as RecipesApplication).appComponent.inject(this)
-
-        // Создаем ViewModel с зависимостями
-        viewModel = RecipesViewModel(repository)
 
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -59,4 +58,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
