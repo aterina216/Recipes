@@ -1,5 +1,6 @@
 package com.example.recipes
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -23,6 +24,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,6 +41,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.recipes.data.remote.model.Meal
 import com.example.recipes.data.repository.MealRepository
+import com.example.recipes.presentation.navigation.BottomNavigation.BottomNavigationBar
+import com.example.recipes.presentation.screen.FavoriteRecipesScreen.favoriteRecipesScreen
 import com.example.recipes.presentation.screen.RecipeDetail.RecipeDetailScreen
 import com.example.recipes.presentation.screen.RecipeListScreen
 import com.example.recipes.presentation.screen.RecipeListScreen.RecipeListScreen
@@ -57,20 +61,61 @@ class MainActivity : ComponentActivity() {
         (application as RecipesApplication).appComponent.inject(this)
 
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
-            var selectedMeal by remember { mutableStateOf<Meal?>(null) }
+            RecipesTheme {
+                var selectedMeal by remember { mutableStateOf<Meal?>(null) }
+                val currentScreen by viewModel.currentScreen.collectAsState()
 
-            if (selectedMeal != null) {
-                RecipeDetailScreen(
-                    meal = selectedMeal!!,
-                    onBackClick = { selectedMeal = null }
-                )
-            } else {
-                RecipeListScreen(
-                    viewModel = viewModel,
-                    onMealClick = { meal -> selectedMeal = meal }
-                )
+                if (selectedMeal != null) {
+                    RecipeDetailScreen(
+                        meal = selectedMeal!!,
+                        onBackClick = { selectedMeal = null },
+                        onToggleFavorite = { mealId ->
+                            viewModel.toggleFavorite(mealId)
+                            selectedMeal = selectedMeal?.copy(
+                                isFavorite = !selectedMeal!!.isFavorite
+                            )
+                        }
+                    )
+                } else {
+                    Scaffold(
+                        bottomBar = {
+                            BottomNavigationBar(
+                                currentScreen = currentScreen,
+                                onNavigationSelected = { screen ->
+                                    viewModel.navigateTo(screen)
+                                }
+                            )
+                        }
+                    ) { paddingValues ->
+                        Box(modifier = Modifier.padding(paddingValues)) {
+                            when (currentScreen) {
+                                "recipes" -> {
+                                    RecipeListScreen(
+                                        viewModel = viewModel,
+                                        onMealClick = { meal ->
+                                            selectedMeal = meal
+                                        }
+                                    )
+                                }
+                                "favorites" -> {
+                                    favoriteRecipesScreen(
+                                        viewModel = viewModel,
+                                        onMealClick = { meal -> selectedMeal = meal }
+                                    )
+                                }
+                                "search" -> {
+                                    Box(
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text("Поиск будет реализован позже")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }

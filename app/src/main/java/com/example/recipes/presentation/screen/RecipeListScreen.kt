@@ -29,6 +29,7 @@ import coil.compose.AsyncImage
 import com.example.recipes.data.remote.model.Meal
 import com.example.recipes.presentation.component.RecipeItem
 import com.example.recipes.presentation.component.RecipeItem.RecipeItem
+import com.example.recipes.presentation.screen.recipeCard.RecipeCard
 import com.example.recipes.presentation.viewmodel.RecipesViewModel
 
 object RecipeListScreen {
@@ -50,36 +51,16 @@ object RecipeListScreen {
             }
         } else {
             LazyColumn {
-                items(meals) { meal ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp)
-                            .clickable { onMealClick(meal) },
-                        elevation = 4.dp
-                    ) {
-                        Column {
-                            AsyncImage(
-                                model = meal.strMealThumb,
-                                contentDescription = meal.strMeal,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(200.dp),
-                                contentScale = ContentScale.Crop
-                            )
-
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Text(
-                                    text = meal.strMeal,
-                                    style = MaterialTheme.typography.h6
-                                )
-                                Text(
-                                    text = "${meal.strCategory} • ${meal.strArea}",
-                                    style = MaterialTheme.typography.h6,    // Подзаголовок
-                                )
-                            }
+                items(meals) {
+                    meal ->
+                    RecipeCard(
+                        meal = meal,
+                        onMealClick = onMealClick,
+                        onToggleFavorite = {
+                            mealid ->
+                            viewModel.toggleFavorite(mealid)
                         }
-                    }
+                    )
                 }
             }
         }

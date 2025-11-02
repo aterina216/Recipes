@@ -29,6 +29,9 @@ class RecipesViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
+    private val _currentScreen = MutableStateFlow("recipes")
+    val currentScreen: StateFlow<String> = _currentScreen
+
     init {
         loadRandomMeals()
         loadFavorites()
@@ -52,6 +55,7 @@ class RecipesViewModel @Inject constructor(
         viewModelScope.launch {
             repository.toggleFavorite(mealId)
             loadRandomMeals()
+            loadFavorites()
         }
     }
 
@@ -70,5 +74,9 @@ class RecipesViewModel @Inject constructor(
 
     private fun getFavorites(): Flow<List<Meal>>{
         return repository.getFavorites()
+    }
+
+    fun navigateTo(screen: String){
+        _currentScreen.value = screen
     }
 }
