@@ -6,8 +6,11 @@ import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.sharp.Home
 import androidx.compose.runtime.Composable
+import androidx.navigation.NavController
 
 object BottomNavigation {
 
@@ -15,24 +18,33 @@ object BottomNavigation {
     fun BottomNavigationBar(
         currentScreen: String,
         onNavigationSelected: (String) -> Unit
-    ){
-        BottomNavigation() {
+    ) {
+        BottomNavigation {
+            BottomNavigationItem(
+                icon = {
+                    Icon(Icons.Default.Home, "Рецепты")
+                },
+                label = { Text("Рецепты") },
+                selected = currentScreen == "recipes",
+                onClick = { onNavigationSelected("recipes") }
+            )
+
             BottomNavigationItem(
                 icon = {
                     Icon(Icons.Default.Favorite, "Избранное")
                 },
                 label = { Text("Избранное") },
                 selected = currentScreen == "favorites",
-                onClick = {onNavigationSelected("favorites")}
+                onClick = { onNavigationSelected("favorites") }
             )
 
             BottomNavigationItem(
                 icon = {
                     Icon(Icons.Default.Search, "Поиск")
                 },
-                label = {Text("Поиск")},
+                label = { Text("Поиск") },
                 selected = currentScreen == "search",
-                onClick = {onNavigationSelected("search")}
+                onClick = { onNavigationSelected("search") }
             )
         }
     }

@@ -9,9 +9,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
+import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -25,54 +29,49 @@ import com.example.recipes.presentation.screen.recipeCard.RecipeCard
 import com.example.recipes.presentation.viewmodel.RecipesViewModel
 import dagger.Component
 
-object FavoriteRecipesScreen {
 
-    @Composable
-    fun favoriteRecipesScreen(
-       viewModel: RecipesViewModel,
-       onMealClick: (Meal) -> Unit = {}
-    ){
-        val favoriteMeals by viewModel.favorite_meals.collectAsState()
+@Composable
+fun FavoriteRecipesScreen(
+    viewModel: RecipesViewModel,
+    onMealClick: (Meal) -> Unit = {}
+) {
+    val favoriteMeals by viewModel.favoriteMeals.collectAsState()
 
-        if(favoriteMeals.isEmpty()){
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ){
-                Column (
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+    if (favoriteMeals.isEmpty()) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.FavoriteBorder,
+                    contentDescription = "Нет избранных",
+                    modifier = Modifier.size(64.dp),
+                    tint = Color.Gray
                 )
-                {
-                    Icon(
-                        imageVector = Icons.Outlined.FavoriteBorder,
-                        contentDescription = "Нет избранных",
-                        modifier = Modifier.size(64.dp),
-                        tint = Color.Gray
-                    )
-                    Text (
-                        text = "Нет избранных рецептов",
-                        style = MaterialTheme.typography.h6,
-                        color = Color.Gray,
-                        modifier = Modifier.padding(top = 16.dp)
-                    )
-                }
+                Text(
+                    text = "Нет избранных рецептов",
+                    style = MaterialTheme.typography.h6,
+                    color = Color.Gray,
+                    modifier = Modifier.padding(top = 16.dp)
+                )
             }
         }
-        else {
-            LazyColumn {
-                items(favoriteMeals) {
-                    meal ->
-                    RecipeCard(
-                        meal = meal,
-                        onMealClick = onMealClick,
-                        onToggleFavorite = { mealId ->
-                            viewModel.toggleFavorite(mealId)
-                        }
-                    )
-                }
+    } else {
+        LazyColumn {
+            items(favoriteMeals) { meal ->
+                RecipeCard(
+                    meal = meal,
+                    onMealClick = onMealClick,
+                    onToggleFavorite = { mealId ->
+                        // Вызываем toggleFavorite из ViewModel
+                        viewModel.toggleFavorite(mealId)
+                    }
+                )
             }
         }
     }
-
 }

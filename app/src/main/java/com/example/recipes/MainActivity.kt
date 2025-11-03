@@ -38,11 +38,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import coil.compose.AsyncImage
 import com.example.recipes.data.remote.model.Meal
 import com.example.recipes.data.repository.MealRepository
 import com.example.recipes.presentation.navigation.BottomNavigation.BottomNavigationBar
-import com.example.recipes.presentation.screen.FavoriteRecipesScreen.favoriteRecipesScreen
+import com.example.recipes.presentation.screen.FavoriteRecipesScreen
+import com.example.recipes.presentation.screen.MainScreen
 import com.example.recipes.presentation.screen.RecipeDetail.RecipeDetailScreen
 import com.example.recipes.presentation.screen.RecipeListScreen
 import com.example.recipes.presentation.screen.RecipeListScreen.RecipeListScreen
@@ -54,7 +61,6 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var viewModelFactory: ViewModelProvider.Factory
-
     private val viewModel: RecipesViewModel by viewModels { viewModelFactory }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,9 +69,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             RecipesTheme {
-                var selectedMeal by remember { mutableStateOf<Meal?>(null) }
                 val currentScreen by viewModel.currentScreen.collectAsState()
+                var selectedMeal by remember { mutableStateOf<Meal?>(null) }
 
+                // Если выбран рецепт - показываем детали
                 if (selectedMeal != null) {
                     RecipeDetailScreen(
                         meal = selectedMeal!!,
@@ -78,6 +85,7 @@ class MainActivity : ComponentActivity() {
                         }
                     )
                 } else {
+                    // Основной экран с навигацией
                     Scaffold(
                         bottomBar = {
                             BottomNavigationBar(
@@ -99,9 +107,11 @@ class MainActivity : ComponentActivity() {
                                     )
                                 }
                                 "favorites" -> {
-                                    favoriteRecipesScreen(
+                                    FavoriteRecipesScreen(
                                         viewModel = viewModel,
-                                        onMealClick = { meal -> selectedMeal = meal }
+                                        onMealClick = { meal ->
+                                            selectedMeal = meal
+                                        }
                                     )
                                 }
                                 "search" -> {

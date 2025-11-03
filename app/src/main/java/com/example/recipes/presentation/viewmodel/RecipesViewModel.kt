@@ -24,7 +24,7 @@ class RecipesViewModel @Inject constructor(
     val meals: StateFlow<List<Meal>> = _meals
 
     private val _favoriteMeals = MutableStateFlow<List<Meal>>(emptyList())
-    val favorite_meals : StateFlow<List<Meal>> = _favoriteMeals
+    val favoriteMeals: StateFlow<List<Meal>> = _favoriteMeals
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
@@ -39,7 +39,6 @@ class RecipesViewModel @Inject constructor(
 
     private fun loadRandomMeals() {
         viewModelScope.launch {
-            MemoryLogger.logMemory("BEFORE_LOAD")
             _isLoading.value = true
             try {
                 _meals.value = repository.getRandomMeals()
@@ -47,36 +46,27 @@ class RecipesViewModel @Inject constructor(
                 Log.e("RecipesViewModel", "Error loading meals", e)
             }
             _isLoading.value = false
-            MemoryLogger.logMemory("AFTER_LOAD")
         }
     }
 
     fun toggleFavorite(mealId: String) {
         viewModelScope.launch {
             repository.toggleFavorite(mealId)
+            // Просто перезагружаем оба списка
             loadRandomMeals()
             loadFavorites()
         }
     }
 
-    fun checkMemory() {
-        MemoryLogger.logMemory("MANUAL_CHECK")
-    }
-
-    private fun loadFavorites(){
+    private fun loadFavorites() {
         viewModelScope.launch {
-            repository.getFavorites().collect {
-                favoriteList ->
-                _favoriteMeals.value = favoriteList
+            repository.getFavorites().collect { favorites ->
+                _favoriteMeals.value = favorites
             }
         }
     }
 
-    private fun getFavorites(): Flow<List<Meal>>{
-        return repository.getFavorites()
-    }
-
-    fun navigateTo(screen: String){
+    fun navigateTo(screen: String) {
         _currentScreen.value = screen
     }
 }

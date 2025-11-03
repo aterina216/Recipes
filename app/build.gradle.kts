@@ -90,4 +90,6 @@ dependencies {
     kapt ("com.google.dagger:dagger-android-processor:2.48")
 
     implementation("com.github.bumptech.glide:compose:1.0.0-beta01")
+
+    implementation("androidx.navigation:navigation-compose:2.7.7")
 }

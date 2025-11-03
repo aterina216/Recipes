@@ -13,8 +13,14 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Card
 import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
+import androidx.compose.material.TopAppBar
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -37,30 +43,50 @@ object RecipeListScreen {
     @Composable
     fun RecipeListScreen(
         viewModel: RecipesViewModel,
-        onMealClick: (Meal) -> Unit = {}
+        onMealClick: (Meal) -> Unit = {},
+        onFavoriteClick: () -> Unit = {}
     ) {
         val meals by viewModel.meals.collectAsState()
         val isLoading by viewModel.isLoading.collectAsState()
 
-        if (isLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-        } else {
-            LazyColumn {
-                items(meals) {
-                    meal ->
-                    RecipeCard(
-                        meal = meal,
-                        onMealClick = onMealClick,
-                        onToggleFavorite = {
-                            mealid ->
-                            viewModel.toggleFavorite(mealid)
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Рецепты") },
+                    actions = {
+                        IconButton(onClick = onFavoriteClick) {
+                            Icon(
+                                imageVector = Icons.Default.Favorite,
+                                contentDescription = "Избранное"
+                            )
                         }
-                    )
+                    }
+                )
+            }
+        )
+        { paddingValues ->
+            if (isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.padding(paddingValues)
+                ) {
+                    items(meals) { meal ->
+                        RecipeCard(
+                            meal = meal,
+                            onMealClick = onMealClick,
+                            onToggleFavorite = { mealid ->
+                                viewModel.toggleFavorite(mealid)
+                            }
+                        )
+                    }
                 }
             }
         }
