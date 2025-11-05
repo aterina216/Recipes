@@ -7,6 +7,7 @@ import com.example.recipes.data.remote.api.MealApi
 import com.example.recipes.data.remote.model.Meal
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 
 class MealRepository(
     private val mealApi: MealApi,
@@ -56,8 +57,9 @@ class MealRepository(
     // Поиск
     fun searchMeals(query: String): Flow<List<Meal>> {
         return if (query.isBlank()) {
-            mealDao.getAllMeals()
+            flowOf(emptyList())
         } else {
+            // Сначала ищем в локальной БД
             mealDao.searchMeals(query)
         }
     }
@@ -71,7 +73,19 @@ class MealRepository(
         return mealDao.getMealById(id)
     }
 
-    suspend fun searchMealApi(query: String): List<Meal>{
-        return emptyList()
+    suspend fun searchMealsFromApi(query: String): List<Meal> {
+        return try {
+            val response = mealApi.searchMeals(query)
+            val meals = response.meals ?: emptyList()
+
+            // Преобразуем nullable список в non-nullable
+            val nonNullableMeals = meals.filterNotNull()
+
+            mealDao.insertMeals(nonNullableMeals)
+            nonNullableMeals
+        } catch (e: Exception) {
+            Log.e("MealRepository", "Error searching meals from API", e)
+            emptyList()
+        }
     }
 }

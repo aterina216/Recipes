@@ -85,10 +85,25 @@ class RecipesViewModel @Inject constructor(
         _isSearching.value = query.isNotBlank()
 
         viewModelScope.launch {
-            repository.searchMeals(query).collect {
-                results ->
-                _searchResults.value = results
-            }
+           if(query.isNotBlank() && query.length > 2){
+               _isSearching.value = true
+
+               try {
+                   val apiResults = repository.searchMealsFromApi(query)
+                   _searchResults.value = apiResults
+               }
+               catch (e: Exception){
+                   Log.e("RecipesViewModel", "API search error", e)
+                   _searchResults.value = emptyList()
+               }
+               _isSearching.value = false
+           }
+            else {
+                repository.searchMeals(query).collect {
+                    localResults ->
+                    _searchResults.value = localResults
+                }
+           }
         }
     }
 
