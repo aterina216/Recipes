@@ -70,4 +70,8 @@ class MealRepository(
     suspend fun getMealById(id: String): Meal?{
         return mealDao.getMealById(id)
     }
+
+    suspend fun searchMealApi(query: String): List<Meal>{
+        return emptyList()
+    }
 }

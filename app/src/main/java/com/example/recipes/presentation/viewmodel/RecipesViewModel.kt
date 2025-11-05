@@ -12,6 +12,7 @@ import com.example.recipes.utils.MemoryLogger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.compose
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -31,6 +32,15 @@ class RecipesViewModel @Inject constructor(
 
     private val _currentScreen = MutableStateFlow("recipes")
     val currentScreen: StateFlow<String> = _currentScreen
+
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
+    private val _searchResults = MutableStateFlow<List<Meal>>(emptyList())
+    val searchResults: StateFlow<List<Meal>> = _searchResults.asStateFlow()
+
+    private val _isSearching = MutableStateFlow(false)
+    val isSearching: StateFlow<Boolean> = _isSearching.asStateFlow()
 
     init {
         loadRandomMeals()
@@ -68,5 +78,23 @@ class RecipesViewModel @Inject constructor(
 
     fun navigateTo(screen: String) {
         _currentScreen.value = screen
+    }
+
+    fun onSearchQueryChanged(query: String){
+        _searchQuery.value = query
+        _isSearching.value = query.isNotBlank()
+
+        viewModelScope.launch {
+            repository.searchMeals(query).collect {
+                results ->
+                _searchResults.value = results
+            }
+        }
+    }
+
+    fun cleanSearch(){
+        _searchQuery.value = ""
+        _isSearching.value = false
+        _searchResults.value = emptyList()
     }
 }

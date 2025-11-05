@@ -53,6 +53,7 @@ import com.example.recipes.presentation.screen.MainScreen
 import com.example.recipes.presentation.screen.RecipeDetail.RecipeDetailScreen
 import com.example.recipes.presentation.screen.RecipeListScreen
 import com.example.recipes.presentation.screen.RecipeListScreen.RecipeListScreen
+import com.example.recipes.presentation.screen.SearchScreen
 import com.example.recipes.presentation.viewmodel.RecipesViewModel
 import com.example.recipes.ui.theme.RecipesTheme
 import javax.inject.Inject
@@ -115,12 +116,12 @@ class MainActivity : ComponentActivity() {
                                     )
                                 }
                                 "search" -> {
-                                    Box(
-                                        modifier = Modifier.fillMaxSize(),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text("Поиск будет реализован позже")
-                                    }
+                                    SearchScreen(
+                                        viewModel = viewModel,
+                                        onMealClick = {
+                                            meal -> selectedMeal = meal
+                                        }
+                                    )
                                 }
                             }
                         }
