@@ -4,14 +4,17 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
@@ -83,16 +86,6 @@ object RecipeDetail {
                         }
                     }
                 )
-            },
-
-            floatingActionButton = {
-                ExtendedFloatingActionButton(
-                    onClick = { onShareClick(currentMeal) },
-                    icon = { Icon(Icons.Default.Share, "Поделиться") },
-                    text = { Text("Поделиться рецептом") },
-                    containerColor = MaterialTheme.colors.primary,
-                    contentColor = MaterialTheme.colors.primary
-                )
             }
 
         ) { paddingValues ->
@@ -151,6 +144,14 @@ object RecipeDetail {
                         style = MaterialTheme.typography.body1,
                         modifier = Modifier.padding(top = 8.dp)
                     )
+
+                    Button(
+                        onClick = { onShareClick(currentMeal) }
+                    ) {
+                        Icon(Icons.Default.Share, contentDescription = "Поделиться", modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Поделиться")
+                    }
 
                     Text(
                         text = "Инструкции:",
