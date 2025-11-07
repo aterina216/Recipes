@@ -1,6 +1,7 @@
 package com.example.recipes
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -64,6 +65,31 @@ class MainActivity : ComponentActivity() {
     lateinit var viewModelFactory: ViewModelProvider.Factory
     private val viewModel: RecipesViewModel by viewModels { viewModelFactory }
 
+    private fun buildShareText(meal: Meal): String {
+        return """
+            🍽️ ${meal.strMeal}
+            
+            Категория: ${meal.strCategory}
+            Кухня: ${meal.strArea}
+            
+            ${meal.strInstructions?.take(200)?.let {
+            if (it.length == 200) "$it..." else it
+        } ?: "Описание рецепта отсутствует"}
+            
+            Приложение: Рецепты от ${packageName}
+        """.trimIndent()
+    }
+
+    private fun shareRecipe(meal: Meal) {
+        val shareText = buildShareText(meal)
+        val shareIntent = Intent().apply {
+            action = Intent.ACTION_SEND
+            putExtra(Intent.EXTRA_TEXT, shareText)
+            type = "text/plain"
+        }
+        startActivity(Intent.createChooser(shareIntent, "Поделиться рецептом"))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         (application as RecipesApplication).appComponent.inject(this)
 
@@ -83,6 +109,9 @@ class MainActivity : ComponentActivity() {
                             selectedMeal = selectedMeal?.copy(
                                 isFavorite = !selectedMeal!!.isFavorite
                             )
+                        },
+                        onShareClick = { meal ->
+                            shareRecipe(meal)  // Передаем колбэк
                         }
                     )
                 } else {

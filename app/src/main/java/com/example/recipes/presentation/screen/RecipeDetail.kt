@@ -22,7 +22,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.Favorite
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -44,7 +46,8 @@ object RecipeDetail {
     fun RecipeDetailScreen(
         meal: Meal, // Принимаем готовый Meal объект, а не mealId
         onBackClick: () -> Unit = {},
-        onToggleFavorite: (String) -> Unit
+        onToggleFavorite: (String) -> Unit,
+        onShareClick: (Meal) -> Unit = {}
     ) {
         // Создаем локальное состояние для мгновенного обновления UI
         var currentMeal by remember { mutableStateOf(meal) }
@@ -80,7 +83,18 @@ object RecipeDetail {
                         }
                     }
                 )
+            },
+
+            floatingActionButton = {
+                ExtendedFloatingActionButton(
+                    onClick = { onShareClick(currentMeal) },
+                    icon = { Icon(Icons.Default.Share, "Поделиться") },
+                    text = { Text("Поделиться рецептом") },
+                    containerColor = MaterialTheme.colors.primary,
+                    contentColor = MaterialTheme.colors.primary
+                )
             }
+
         ) { paddingValues ->
             Column(
                 modifier = Modifier
