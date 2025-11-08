@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.recipes.data.local.db.AppDatabase
 import com.example.recipes.data.remote.RetrofitClient
+import com.example.recipes.data.remote.model.Category
 import com.example.recipes.data.remote.model.Meal
 import com.example.recipes.data.repository.MealRepository
 import com.example.recipes.utils.MemoryLogger
@@ -41,6 +42,15 @@ class RecipesViewModel @Inject constructor(
 
     private val _isSearching = MutableStateFlow(false)
     val isSearching: StateFlow<Boolean> = _isSearching.asStateFlow()
+
+    private val _categories = MutableStateFlow<List<Category>>(emptyList())
+    val categories: StateFlow<List<Category>> = _categories
+
+    private val _categoryMeals = MutableStateFlow<List<Meal>>(emptyList())
+    val categoryMeals: StateFlow<List<Meal>> = _categoryMeals
+
+    private val _isLoadingCategory = MutableStateFlow(false)
+    val isLoadingCategory: StateFlow<Boolean> = _isLoadingCategory
 
     init {
         loadRandomMeals()
@@ -112,4 +122,19 @@ class RecipesViewModel @Inject constructor(
         _isSearching.value = false
         _searchResults.value = emptyList()
     }
+
+    fun loadCategories(){
+        viewModelScope.launch {
+            _categories.value = repository.getCategories()
+        }
+    }
+
+    fun loadMealsByCategory(category: String) {
+        viewModelScope.launch {
+            _isLoadingCategory.value = true
+            _categoryMeals.value = repository.getMealsByCategory(category)
+            _isLoadingCategory.value = false
+        }
+    }
+
 }

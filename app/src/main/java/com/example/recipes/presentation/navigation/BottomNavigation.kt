@@ -7,6 +7,7 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.sharp.Home
 import androidx.compose.runtime.Composable
@@ -45,6 +46,15 @@ object BottomNavigation {
                 label = { Text("Поиск") },
                 selected = currentScreen == "search",
                 onClick = { onNavigationSelected("search") }
+            )
+
+            BottomNavigationItem(
+                icon = {
+                    Icon(Icons.Default.List, "Категории")
+                },
+                label = { Text("Категории") },
+                selected = currentScreen == "categories",
+                onClick = { onNavigationSelected("categories") }
             )
         }
     }

@@ -3,6 +3,7 @@ package com.example.recipes
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -49,6 +50,8 @@ import coil.compose.AsyncImage
 import com.example.recipes.data.remote.model.Meal
 import com.example.recipes.data.repository.MealRepository
 import com.example.recipes.presentation.navigation.BottomNavigation.BottomNavigationBar
+import com.example.recipes.presentation.screen.CategoriesScreen
+import com.example.recipes.presentation.screen.CategoryRecipesScreen
 import com.example.recipes.presentation.screen.FavoriteRecipesScreen
 import com.example.recipes.presentation.screen.MainScreen
 import com.example.recipes.presentation.screen.RecipeDetail.RecipeDetailScreen
@@ -72,9 +75,11 @@ class MainActivity : ComponentActivity() {
             Категория: ${meal.strCategory}
             Кухня: ${meal.strArea}
             
-            ${meal.strInstructions?.take(200)?.let {
-            if (it.length == 200) "$it..." else it
-        } ?: "Описание рецепта отсутствует"}
+            ${
+            meal.strInstructions?.take(200)?.let {
+                if (it.length == 200) "$it..." else it
+            } ?: "Описание рецепта отсутствует"
+        }
             
             Приложение: Рецепты от ${packageName}
         """.trimIndent()
@@ -98,59 +103,86 @@ class MainActivity : ComponentActivity() {
             RecipesTheme {
                 val currentScreen by viewModel.currentScreen.collectAsState()
                 var selectedMeal by remember { mutableStateOf<Meal?>(null) }
+                var selectedCategory by remember { mutableStateOf<String?>(null) }
 
                 // Если выбран рецепт - показываем детали
-                if (selectedMeal != null) {
-                    RecipeDetailScreen(
-                        meal = selectedMeal!!,
-                        onBackClick = { selectedMeal = null },
-                        onToggleFavorite = { mealId ->
-                            viewModel.toggleFavorite(mealId)
-                            selectedMeal = selectedMeal?.copy(
-                                isFavorite = !selectedMeal!!.isFavorite
-                            )
-                        },
-                        onShareClick = { meal ->
-                            shareRecipe(meal)  // Передаем колбэк
-                        }
-                    )
-                } else {
-                    // Основной экран с навигацией
-                    Scaffold(
-                        bottomBar = {
-                            BottomNavigationBar(
-                                currentScreen = currentScreen,
-                                onNavigationSelected = { screen ->
-                                    viewModel.navigateTo(screen)
-                                }
-                            )
-                        }
-                    ) { paddingValues ->
-                        Box(modifier = Modifier.padding(paddingValues)) {
-                            when (currentScreen) {
-                                "recipes" -> {
-                                    RecipeListScreen(
-                                        viewModel = viewModel,
-                                        onMealClick = { meal ->
-                                            selectedMeal = meal
-                                        }
-                                    )
-                                }
-                                "favorites" -> {
-                                    FavoriteRecipesScreen(
-                                        viewModel = viewModel,
-                                        onMealClick = { meal ->
-                                            selectedMeal = meal
-                                        }
-                                    )
-                                }
-                                "search" -> {
-                                    SearchScreen(
-                                        viewModel = viewModel,
-                                        onMealClick = {
-                                            meal -> selectedMeal = meal
-                                        }
-                                    )
+                when {
+                    selectedMeal != null -> {
+                        RecipeDetailScreen(
+                            meal = selectedMeal!!,
+                            onBackClick = { selectedMeal = null },
+                            onToggleFavorite = { mealId ->
+                                viewModel.toggleFavorite(mealId)
+                                selectedMeal = selectedMeal?.copy(
+                                    isFavorite = !selectedMeal!!.isFavorite
+                                )
+                            },
+                            onShareClick = { meal ->
+                                shareRecipe(meal)  // Передаем колбэк
+                            }
+                        )
+                    }
+
+                    selectedCategory != null -> {
+                        CategoryRecipesScreen(
+                            category = selectedCategory!!,
+                            viewModel = viewModel,
+                            onBackClick = { selectedCategory = null },
+                            onMealClick = { meal ->
+                                selectedMeal = meal
+                            }
+                        )
+                    }
+
+                    else -> {
+                        // Основной экран с навигацией
+                        Scaffold(
+                            bottomBar = {
+                                BottomNavigationBar(
+                                    currentScreen = currentScreen,
+                                    onNavigationSelected = { screen ->
+                                        viewModel.navigateTo(screen)
+                                    }
+                                )
+                            }
+                        ) { paddingValues ->
+                            Box(modifier = Modifier.padding(paddingValues)) {
+                                when (currentScreen) {
+                                    "recipes" -> {
+                                        RecipeListScreen(
+                                            viewModel = viewModel,
+                                            onMealClick = { meal ->
+                                                selectedMeal = meal
+                                            }
+                                        )
+                                    }
+
+                                    "favorites" -> {
+                                        FavoriteRecipesScreen(
+                                            viewModel = viewModel,
+                                            onMealClick = { meal ->
+                                                selectedMeal = meal
+                                            }
+                                        )
+                                    }
+
+                                    "search" -> {
+                                        SearchScreen(
+                                            viewModel = viewModel,
+                                            onMealClick = { meal ->
+                                                selectedMeal = meal
+                                            }
+                                        )
+                                    }
+
+                                    "categories" -> {
+                                        CategoriesScreen(
+                                            onCategoryClick = {
+                                                categoryName -> selectedCategory = categoryName
+                                            },
+                                            viewModel = viewModel
+                                        )
+                                    }
                                 }
                             }
                         }

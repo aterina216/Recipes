@@ -4,10 +4,12 @@ import android.util.Log
 import com.example.recipes.data.local.dao.Mealdao
 import com.example.recipes.data.remote.RetrofitClient
 import com.example.recipes.data.remote.api.MealApi
+import com.example.recipes.data.remote.model.Category
 import com.example.recipes.data.remote.model.Meal
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
+import kotlin.collections.emptyList
 
 class MealRepository(
     private val mealApi: MealApi,
@@ -69,7 +71,7 @@ class MealRepository(
         mealDao.updateLastedAccessed(mealId)
     }
 
-    suspend fun getMealById(id: String): Meal?{
+    suspend fun getMealById(id: String): Meal? {
         return mealDao.getMealById(id)
     }
 
@@ -88,4 +90,34 @@ class MealRepository(
             emptyList()
         }
     }
+
+    suspend fun getCategories(): List<Category> {
+        return try {
+            val response = mealApi.getCategories()
+            response.meals
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    suspend fun getMealsByCategory(category: String): List<Meal> {
+        return try {
+            // 1. Получаем список ID рецептов категории
+            val categoryResponse = mealApi.getMealsByCategory(category)
+
+            // 2. Для каждого ID загружаем полный рецепт
+            val fullMeals = mutableListOf<Meal>()
+            categoryResponse.meals?.forEach { meal ->
+                if (meal != null) {
+                    val fullMeal = mealApi.getMealById(meal.idMeal)
+                    fullMeal.meals?.firstOrNull()?.let { fullMeals.add(it) }
+                }
+            }
+
+            fullMeals
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
 }
