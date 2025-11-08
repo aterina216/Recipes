@@ -13,6 +13,8 @@ import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButtonDefaults.Icon
@@ -38,27 +40,36 @@ fun CategoryRecipesScreen(
     onBackClick: () -> Unit = {},
     onMealClick: (Meal) -> Unit = {}
 ) {
-
     val meals by viewModel.categoryMeals.collectAsState()
+    val isLoading by viewModel.isLoadingCategory.collectAsState()  // ИСПОЛЬЗУЕМ НОВОЕ СОСТОЯНИЕ
 
     LaunchedEffect(category) {
         viewModel.loadMealsByCategory(category)
     }
 
-
     Scaffold(
         topBar = {
-            TopAppBar(
+            CenterAlignedTopAppBar(
                 title = { Text("Рецепты: $category") },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.Default.ArrowBack, "Назад")
+                        Icon(Icons.Filled.ArrowBack, "Назад")
                     }
                 }
             )
         }
     ) { paddingValues ->
-        if (meals.isEmpty()) {
+        // ПРОВЕРЯЕМ ЗАГРУЗКУ ПЕРВЫМ ДЕЛОМ
+        if (isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()  // ПОКАЗЫВАЕМ КРУТЕЛКУ
+            }
+        } else if (meals.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -68,15 +79,12 @@ fun CategoryRecipesScreen(
                 Text("Рецепты не найдены")
             }
         } else {
-            LazyColumn(modifier = Modifier.padding(paddingValues))
-            {
-                items(meals) {
-                    meal ->
+            LazyColumn(modifier = Modifier.padding(paddingValues)) {
+                items(meals) { meal ->
                     RecipeCard(
                         meal = meal,
                         onMealClick = onMealClick,
-                        onToggleFavorite = {
-                            mealId ->
+                        onToggleFavorite = { mealId ->
                             viewModel.toggleFavorite(mealId)
                         }
                     )
