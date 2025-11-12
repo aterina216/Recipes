@@ -47,18 +47,42 @@ object RecipeDetail {
 
     @Composable
     fun RecipeDetailScreen(
-        meal: Meal, // Принимаем готовый Meal объект, а не mealId
-        onBackClick: () -> Unit = {},
-        onToggleFavorite: (String) -> Unit,
-        onShareClick: (Meal) -> Unit = {}
+        mealId: String,
+        viewModel: RecipesViewModel,
+        onBackClick: () -> Unit,
+        onShareClick: (Meal) -> Unit
     ) {
-        // Создаем локальное состояние для мгновенного обновления UI
-        var currentMeal by remember { mutableStateOf(meal) }
-
-        LaunchedEffect(meal) {
-            currentMeal = meal
+        // Ищем рецепт в существующих данных
+        var meal by remember(mealId) {
+            mutableStateOf(viewModel.getMealById(mealId))
         }
 
+        // Функция для переключения избранного
+        val toggleFavorite = {
+            meal?.let { currentMeal ->
+                viewModel.toggleFavorite(currentMeal.idMeal)
+                // Обновляем локальное состояние
+                meal = currentMeal.copy(isFavorite = !currentMeal.isFavorite)
+            }
+        }
+
+        // Если не нашли - показываем заглушку
+        if (meal == null) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Рецепт не найден")
+                    Button(onClick = onBackClick) {
+                        Text("Назад")
+                    }
+                }
+            }
+            return
+        }
+
+        // Отображаем детали рецепта
         Scaffold(
             topBar = {
                 TopAppBar(
@@ -67,27 +91,9 @@ object RecipeDetail {
                         IconButton(onClick = onBackClick) {
                             Icon(Icons.Default.ArrowBack, "Назад")
                         }
-                    },
-                    actions = {
-                        IconButton(onClick = {
-                            onToggleFavorite(currentMeal.idMeal)
-                            // Мгновенно обновляем локальное состояние
-                            currentMeal = currentMeal.copy(isFavorite = !currentMeal.isFavorite)
-                        }) {
-                            Icon(
-                                imageVector = if (currentMeal.isFavorite) {
-                                    Icons.Filled.Favorite
-                                } else {
-                                    Icons.Outlined.Favorite
-                                },
-                                contentDescription = "Избранное",
-                                tint = if (currentMeal.isFavorite) Color.Red else Color.Gray
-                            )
-                        }
                     }
                 )
             }
-
         ) { paddingValues ->
             Column(
                 modifier = Modifier
@@ -95,15 +101,17 @@ object RecipeDetail {
                     .padding(paddingValues)
                     .verticalScroll(rememberScrollState())
             ) {
+                // Картинка
                 AsyncImage(
-                    model = currentMeal.strMealThumb,
-                    contentDescription = currentMeal.strMeal,
+                    model = meal!!.strMealThumb,
+                    contentDescription = meal!!.strMeal,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(250.dp),
                     contentScale = ContentScale.Crop
                 )
 
+                // Информация
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -111,56 +119,46 @@ object RecipeDetail {
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = currentMeal.strMeal,
+                            text = meal!!.strMeal,
                             style = MaterialTheme.typography.h4,
                             modifier = Modifier.weight(1f)
                         )
 
-                        IconButton(onClick = {
-                            onToggleFavorite(currentMeal.idMeal)
-                            currentMeal = currentMeal.copy(isFavorite = !currentMeal.isFavorite)
-                        }) {
+                        // Дублирующая иконка избранного в основном контенте
+                        IconButton(onClick = toggleFavorite as () -> Unit) {
                             Icon(
-                                imageVector = if (currentMeal.isFavorite) {
+                                imageVector = if (meal!!.isFavorite) {
                                     Icons.Filled.Favorite
                                 } else {
                                     Icons.Outlined.Favorite
                                 },
-                                contentDescription = null,
-                                tint = if (currentMeal.isFavorite) Color.Red else Color.Gray,
+                                contentDescription = "Избранное",
+                                tint = if (meal!!.isFavorite) Color.Red else Color.Gray,
                                 modifier = Modifier.size(32.dp)
                             )
                         }
                     }
 
-                    Text(
-                        text = "Категория: ${currentMeal.strCategory}",
-                        style = MaterialTheme.typography.body1,
-                        modifier = Modifier.padding(top = 16.dp)
-                    )
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                    Text(
-                        text = "Кухня: ${currentMeal.strArea}",
-                        style = MaterialTheme.typography.body1,
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
+                    Text("Категория: ${meal!!.strCategory}")
+                    Text("Кухня: ${meal!!.strArea}")
 
-                    Button(
-                        onClick = { onShareClick(currentMeal) }
-                    ) {
-                        Icon(Icons.Default.Share, contentDescription = "Поделиться", modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Поделиться")
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Button(onClick = { onShareClick(meal!!) }) {
+                        Text("Поделиться рецептом")
                     }
+
+                    Spacer(modifier = Modifier.height(24.dp))
 
                     Text(
                         text = "Инструкции:",
-                        style = MaterialTheme.typography.h6,
-                        modifier = Modifier.padding(top = 24.dp, bottom = 8.dp)
+                        style = MaterialTheme.typography.h6
                     )
 
                     Text(
-                        text = currentMeal.strInstructions ?: "Инструкции не указаны",
+                        text = meal!!.strInstructions ?: "Инструкции не указаны",
                         style = MaterialTheme.typography.body1
                     )
                 }

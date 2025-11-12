@@ -11,6 +11,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
+import com.example.recipes.data.remote.model.Meal
 import com.example.recipes.presentation.navigation.BottomNavigation
 import com.example.recipes.presentation.navigation.BottomNavigation.BottomNavigationBar
 import com.example.recipes.presentation.screen.RecipeListScreen.RecipeListScreen
@@ -19,13 +20,14 @@ import com.example.recipes.presentation.viewmodel.RecipesViewModel
 @Composable
 fun MainScreen(
     viewModel: RecipesViewModel,
-    navController: NavController
+    onMealClick: (Meal) -> Unit,
+    onCategoryClick: (String) -> Unit
 ) {
     val currentScreen by viewModel.currentScreen.collectAsState()
 
     Scaffold(
         bottomBar = {
-            BottomNavigationBar(
+            BottomNavigation.BottomNavigationBar(
                 currentScreen = currentScreen,
                 onNavigationSelected = { screen ->
                     viewModel.navigateTo(screen)
@@ -36,29 +38,28 @@ fun MainScreen(
         Box(modifier = Modifier.padding(paddingValues)) {
             when (currentScreen) {
                 "recipes" -> {
-                    RecipeListScreen(
+                    RecipeListScreen.RecipeListScreen(
                         viewModel = viewModel,
-                        onMealClick = { meal ->
-                            navController.navigate("recipe_detail/${meal.idMeal}")
-                        }
+                        onMealClick = onMealClick
                     )
                 }
                 "favorites" -> {
                     FavoriteRecipesScreen(
                         viewModel = viewModel,
-                        onMealClick = { meal ->
-                            navController.navigate("recipe_detail/${meal.idMeal}")
-                        },
-
+                        onMealClick = onMealClick
                     )
                 }
                 "search" -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("Поиск будет реализован позже")
-                    }
+                    SearchScreen(
+                        viewModel = viewModel,
+                        onMealClick = onMealClick
+                    )
+                }
+                "categories" -> {
+                    CategoriesScreen(
+                        viewModel = viewModel,
+                        onCategoryClick = onCategoryClick
+                    )
                 }
             }
         }

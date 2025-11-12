@@ -1,5 +1,6 @@
 package com.example.recipes
 
+import AppNavigation
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
@@ -63,10 +64,29 @@ import com.example.recipes.ui.theme.RecipesTheme
 import javax.inject.Inject
 
 class MainActivity : ComponentActivity() {
-
-    @Inject
-    lateinit var viewModelFactory: ViewModelProvider.Factory
+    @Inject lateinit var viewModelFactory: ViewModelProvider.Factory
     private val viewModel: RecipesViewModel by viewModels { viewModelFactory }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        (application as RecipesApplication).appComponent.inject(this)
+        super.onCreate(savedInstanceState)
+
+        setContent {
+            RecipesTheme {
+                AppNavigation(viewModel, this)
+            }
+        }
+    }
+
+    fun shareRecipe(meal: Meal) {
+        val shareText = buildShareText(meal)
+        val shareIntent = Intent().apply {
+            action = Intent.ACTION_SEND
+            putExtra(Intent.EXTRA_TEXT, shareText)
+            type = "text/plain"
+        }
+        startActivity(Intent.createChooser(shareIntent, "Поделиться рецептом"))
+    }
 
     private fun buildShareText(meal: Meal): String {
         return """
@@ -83,112 +103,5 @@ class MainActivity : ComponentActivity() {
             
             Приложение: Рецепты от ${packageName}
         """.trimIndent()
-    }
-
-    private fun shareRecipe(meal: Meal) {
-        val shareText = buildShareText(meal)
-        val shareIntent = Intent().apply {
-            action = Intent.ACTION_SEND
-            putExtra(Intent.EXTRA_TEXT, shareText)
-            type = "text/plain"
-        }
-        startActivity(Intent.createChooser(shareIntent, "Поделиться рецептом"))
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        (application as RecipesApplication).appComponent.inject(this)
-
-        super.onCreate(savedInstanceState)
-        setContent {
-            RecipesTheme {
-                val currentScreen by viewModel.currentScreen.collectAsState()
-                var selectedMeal by remember { mutableStateOf<Meal?>(null) }
-                var selectedCategory by remember { mutableStateOf<String?>(null) }
-
-                // Если выбран рецепт - показываем детали
-                when {
-                    selectedMeal != null -> {
-                        RecipeDetailScreen(
-                            meal = selectedMeal!!,
-                            onBackClick = { selectedMeal = null },
-                            onToggleFavorite = { mealId ->
-                                viewModel.toggleFavorite(mealId)
-                                selectedMeal = selectedMeal?.copy(
-                                    isFavorite = !selectedMeal!!.isFavorite
-                                )
-                            },
-                            onShareClick = { meal ->
-                                shareRecipe(meal)  // Передаем колбэк
-                            }
-                        )
-                    }
-
-                    selectedCategory != null -> {
-                        CategoryRecipesScreen(
-                            category = selectedCategory!!,
-                            viewModel = viewModel,
-                            onBackClick = { selectedCategory = null },
-                            onMealClick = { meal ->
-                                selectedMeal = meal
-                            }
-                        )
-                    }
-
-                    else -> {
-                        // Основной экран с навигацией
-                        Scaffold(
-                            bottomBar = {
-                                BottomNavigationBar(
-                                    currentScreen = currentScreen,
-                                    onNavigationSelected = { screen ->
-                                        viewModel.navigateTo(screen)
-                                    }
-                                )
-                            }
-                        ) { paddingValues ->
-                            Box(modifier = Modifier.padding(paddingValues)) {
-                                when (currentScreen) {
-                                    "recipes" -> {
-                                        RecipeListScreen(
-                                            viewModel = viewModel,
-                                            onMealClick = { meal ->
-                                                selectedMeal = meal
-                                            }
-                                        )
-                                    }
-
-                                    "favorites" -> {
-                                        FavoriteRecipesScreen(
-                                            viewModel = viewModel,
-                                            onMealClick = { meal ->
-                                                selectedMeal = meal
-                                            }
-                                        )
-                                    }
-
-                                    "search" -> {
-                                        SearchScreen(
-                                            viewModel = viewModel,
-                                            onMealClick = { meal ->
-                                                selectedMeal = meal
-                                            }
-                                        )
-                                    }
-
-                                    "categories" -> {
-                                        CategoriesScreen(
-                                            onCategoryClick = {
-                                                categoryName -> selectedCategory = categoryName
-                                            },
-                                            viewModel = viewModel
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
     }
 }

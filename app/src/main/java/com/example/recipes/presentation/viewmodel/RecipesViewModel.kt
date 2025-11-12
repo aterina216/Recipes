@@ -137,4 +137,12 @@ class RecipesViewModel @Inject constructor(
         }
     }
 
+    fun getMealById(mealId: String): Meal? {
+        // Ищем во всех списках
+        return meals.value.find { it.idMeal == mealId }
+            ?: favoriteMeals.value.find { it.idMeal == mealId }
+            ?: searchResults.value.find { it.idMeal == mealId }
+            ?: categoryMeals.value.find { it.idMeal == mealId }
+    }
+
 }
