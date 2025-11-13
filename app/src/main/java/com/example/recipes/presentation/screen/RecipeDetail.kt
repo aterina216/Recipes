@@ -1,5 +1,11 @@
 package com.example.recipes.presentation.screen
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,7 +20,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
@@ -22,26 +27,30 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.Favorite
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import coil.compose.AsyncImage
+import com.example.recipes.R
 import com.example.recipes.data.remote.model.Meal
 import com.example.recipes.presentation.viewmodel.RecipesViewModel
+import com.example.recipes.utils.DownLoad.downloadImage
+import kotlinx.coroutines.launch
+
 
 object RecipeDetail {
 
@@ -52,9 +61,35 @@ object RecipeDetail {
         onBackClick: () -> Unit,
         onShareClick: (Meal) -> Unit
     ) {
+
+        val context = LocalContext.current
+        val scope = rememberCoroutineScope()
+
+
         // Ищем рецепт в существующих данных
         var meal by remember(mealId) {
             mutableStateOf(viewModel.getMealById(mealId))
+        }
+
+        val downloadCurrentImage = {
+            meal?.let { currentMeal ->
+                currentMeal.strMealThumb?.let { url ->
+                    scope.launch {
+                        // УБРАЛ scope из параметров
+                        downloadImage(context, url, "recipe_${currentMeal.idMeal}")
+                    }
+                } ?: Toast.makeText(context, "Нет изображения для скачивания", Toast.LENGTH_SHORT).show()
+            } ?: Toast.makeText(context, "Рецепт не найден", Toast.LENGTH_SHORT).show()
+        }
+
+        val permissionLauncher = rememberLauncherForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { isGranted ->
+            if (isGranted) {
+                downloadCurrentImage()
+            } else {
+                Toast.makeText(context, "Нужно разрешение для сохранения изображений", Toast.LENGTH_LONG).show()
+            }
         }
 
         // Функция для переключения избранного
@@ -148,6 +183,38 @@ object RecipeDetail {
 
                     Button(onClick = { onShareClick(meal!!) }) {
                         Text("Поделиться рецептом")
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Button(
+
+
+                        onClick = {
+                            // Здесь будет вызов функции скачивания
+
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                downloadCurrentImage()
+                            } else {
+                                // Для старых версий проверяем разрешение
+                                if (ContextCompat.checkSelfPermission(
+                                        context,
+                                        Manifest.permission.WRITE_EXTERNAL_STORAGE
+                                    ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                                ) {
+                                    downloadCurrentImage()
+                                } else {
+                                    permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                                }
+                            }
+                        }
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.outline_save_24),
+                            contentDescription = "Скачать изображение"
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Скачать изображение")
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
